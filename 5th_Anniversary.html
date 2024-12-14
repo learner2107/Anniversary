@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Anniversary Diary</title>
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to bottom, #ff9a9e, #fad0c4);
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Floating Hearts */
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6b81;
+            transform: rotate(-45deg);
+            animation: float 5s linear infinite;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff6b81;
+            border-radius: 50%;
+        }
+
+        .heart::before {
+            top: -10px;
+            left: 0;
+        }
+
+        .heart::after {
+            left: 10px;
+            top: 0;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(-45deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-800px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+
+        /* Diary Container */
+        .diary {
+            width: 300px;
+            height: 400px;
+            perspective: 1500px;
+            position: relative;
+        }
+
+        .diary-cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            backface-visibility: hidden;
+            transition: transform 1s;
+        }
+
+        .diary-cover span {
+            font-size: 1.5em;
+            color: #fff;
+        }
+
+        .diary-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 8px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .diary-content p {
+            font-size: 1em;
+            margin: 20px;
+            text-align: center;
+            color: #333;
+        }
+
+        .turn-page-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            background: #ff758c;
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .turn-page-btn:hover {
+            background: #ff517a;
+        }
+
+        .diary.open .diary-cover {
+            transform: rotateY(-180deg);
+        }
+
+        .diary.open .diary-content {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<div class="diary" id="diary">
+    <div class="diary-cover" onclick="openDiary()">
+        <span>Click kijiye <br> meri feeling janne ke liye</span>
+    </div>
+    <div class="diary-content" id="content">
+        <p id="text"></p>
+        <button class="turn-page-btn" id="turnPage" onclick="nextPage()" style="display: none;">Next feeling</button>
+    </div>
+</div>
+
+<script>
+    // Floating hearts animation
+    function createHeart() {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = Math.random() * 2 + 3 + 's';
+        document.body.appendChild(heart);
+
+        setTimeout(() => {
+            heart.remove();
+        }, 5000);
+    }
+
+    setInterval(createHeart, 300);
+
+    // Diary open and page turning
+    const diary = document.getElementById('diary');
+    const content = document.getElementById('content');
+    const text = document.getElementById('text');
+    const turnPageBtn = document.getElementById('turnPage');
+
+    const pages = [
+    "My Dearest Aaru",
+
+"Happy 5th Anniversary, my love! 💕 Today marks another milestone in the beautiful journey we've been walking hand in hand. From the moment our paths crossed, you’ve been my greatest blessing, my truest confidant, and the most beautiful part of my story.",
+
+"Looking back on these six incredible years, I’m overwhelmed by how much we’ve grown, both as individuals and as a couple. Every memory we’ve created together feels like a treasure, and every challenge we’ve faced has only strengthened the bond we share. You’ve been my sunshine in the darkest days, my laughter on the hardest nights, and my hope when everything seemed uncertain.",
+
+"Aaru, you have this magical ability to light up my world with just a smile. Your kindness, your quirks, your strength, and your love have all taught me the true meaning of partnership and devotion. I still remember the little moments—the secret giggles, the long conversations, and even the silly fights. Each of those moments has shaped the unshakable love I have for you today.",
+
+"On this special day, I want to remind you of something I know you already feel: You are my everything. From your smallest habits to the way you dream so fearlessly, you inspire me every single day. My heart is yours now and forever, and no matter where life takes us, I promise to walk beside you, holding your hand tightly.",
+
+"Let me say it like this...तेरा हर ख्याल मेरे दिल की धड़कन...तेरे साथ हर दिन जैसे दिवाली की चकन....प्यार तुझसे ही, ये कभी ना होगा कम...तेरे बिना अधूरी मेरी हर खुशी का गम.",
+
+"So, here’s to us, my jaan! Here’s to all the laughter we’ve shared, the dreams we’ve nurtured, and the countless more moments of joy that await us. Thank you for loving me, for believing in me, and for being the amazing, irreplaceable woman you are.",
+
+"Happy Anniversary, my forever love.",
+
+"Yours, always and forever...Uvi 💕",
+    ];
+
+    let currentPage = 0;
+
+    function openDiary() {
+        diary.classList.add('open');
+        showPage();
+    }
+
+    function showPage() {
+        if (currentPage < pages.length) {
+            text.innerText = pages[currentPage];
+            turnPageBtn.style.display = 'block';
+        } else {
+            text.innerText = "Chaliye aaj ke liye itna hi!  Happy Anniversary Jaan! 💕";
+            turnPageBtn.style.display = 'none';
+        }
+    }
+
+    function nextPage() {
+        currentPage++;
+        showPage();
+    }
+</script>
+
+</body>
+</html>
